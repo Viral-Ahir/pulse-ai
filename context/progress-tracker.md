@@ -4,13 +4,19 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 01: Design System — Complete
+- Feature 02: Editor Chrome — Complete
 
 ## Current Goal
 
-- Begin Feature 02 (next feature spec).
+- Begin Feature 03 (next feature spec).
 
 ## Completed
+
+- **Feature 02 — Editor Chrome**
+  - Created `components/editor/editor-navbar.tsx`: fixed `h-12` top navbar, sidebar toggle with `PanelLeftOpen`/`PanelLeftClose` icons, left/center/right layout sections, `bg-surface` + `border-surface-border` styling
+  - Created `components/editor/project-sidebar.tsx`: fixed overlay sidebar (`z-40`, `top-12`, `w-72`), CSS `translate-x` slide-in from left, `isOpen`/`onClose` props, `Projects` header with close button, shadcn Tabs (My Projects / Shared) with empty placeholder states, full-width `New Project` button with `Plus` icon
+  - Dialog pattern: uses existing shadcn Dialog + CSS token infrastructure from Feature 01; no new dialog built per spec
+  - Build verified: `npx next build` compiles cleanly with no TypeScript errors
 
 - **Feature 01 — Design System**
   - Initialized shadcn/ui (Next.js + Tailwind v4, `components.json` configured)
@@ -27,7 +33,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 02 (check `context/feature-specs/` for next spec).
+- Feature 03 (check `context/feature-specs/` for next spec).
 
 ## Open Questions
 
