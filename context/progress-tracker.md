@@ -4,13 +4,24 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 02: Editor Chrome — Complete
+- Feature 03: Auth — Complete
 
 ## Current Goal
 
-- Begin Feature 03 (next feature spec).
+- Begin Feature 04 (check `context/feature-specs/` for next spec).
 
 ## Completed
+
+- **Feature 03 — Auth**
+  - Installed `@clerk/ui`; added `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` to `.env.local`
+  - Created `proxy.ts` at project root: `clerkMiddleware` with `createRouteMatcher` protecting all routes except sign-in/sign-up paths; exports `proxy` (Next.js 16 rename of `middleware`)
+  - Updated `app/layout.tsx`: wrapped with `ClerkProvider`, `appearance={{ theme: dark, variables: { ... } }}` — all color values reference CSS variables, no hardcoded colors
+  - Updated `app/page.tsx`: server component that redirects authenticated users to `/editor` and unauthenticated users to `/sign-in`
+  - Created `app/(auth)/sign-in/[[...sign-in]]/page.tsx` and `app/(auth)/sign-up/[[...sign-up]]/page.tsx`: two-panel layout on `lg+` (left: logo/tagline/feature list; right: Clerk form); form-only on small screens
+  - Created `components/editor/editor-shell.tsx`: client component managing `sidebarOpen` state; wires `EditorNavbar` + `ProjectSidebar`
+  - Created `app/editor/page.tsx`: renders `EditorShell`
+  - Updated `components/editor/editor-navbar.tsx`: added `UserButton` to right section
+  - Build verified: `npm run build` compiles and type-checks cleanly
 
 - **Feature 02 — Editor Chrome**
   - Created `components/editor/editor-navbar.tsx`: fixed `h-12` top navbar, sidebar toggle with `PanelLeftOpen`/`PanelLeftClose` icons, left/center/right layout sections, `bg-surface` + `border-surface-border` styling
@@ -33,7 +44,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 03 (check `context/feature-specs/` for next spec).
+- Feature 04 (check `context/feature-specs/` for next spec).
 
 ## Open Questions
 
