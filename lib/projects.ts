@@ -34,7 +34,9 @@ export async function getProjectsForUser(): Promise<ProjectLists> {
     ? await prisma.project.findMany({
         where: {
           ownerId: { not: userId },
-          collaborators: { some: { email } },
+          collaborators: {
+            some: { email: { equals: email, mode: "insensitive" } },
+          },
         },
         orderBy: { createdAt: "desc" },
         select: { id: true, name: true },

@@ -12,6 +12,7 @@ interface ProjectSidebarProps {
   onClose: () => void;
   ownedProjects: ProjectListItem[];
   sharedProjects: ProjectListItem[];
+  activeProjectId?: string;
   onCreateProject: () => void;
   onRenameProject: (project: ProjectListItem) => void;
   onDeleteProject: (project: ProjectListItem) => void;
@@ -22,6 +23,7 @@ export function ProjectSidebar({
   onClose,
   ownedProjects,
   sharedProjects,
+  activeProjectId,
   onCreateProject,
   onRenameProject,
   onDeleteProject,
@@ -72,14 +74,20 @@ export function ProjectSidebar({
               ) : (
                 <ScrollArea className="h-full">
                   <div className="space-y-0.5">
-                    {ownedProjects.map((project) => (
+                    {ownedProjects.map((project) => {
+                      const isActive = project.id === activeProjectId;
+                      return (
                       <div
                         key={project.id}
-                        className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-elevated"
+                        className={`group flex items-center gap-2 px-3 py-2 rounded-xl ${
+                          isActive ? "bg-brand-dim" : "hover:bg-elevated"
+                        }`}
                       >
                         <Link
                           href={`/editor/${project.id}`}
-                          className="flex-1 text-sm text-copy-primary truncate"
+                          className={`flex-1 text-sm truncate ${
+                            isActive ? "text-brand" : "text-copy-primary"
+                          }`}
                         >
                           {project.name}
                         </Link>
@@ -108,7 +116,8 @@ export function ProjectSidebar({
                           </Button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               )}
@@ -122,17 +131,26 @@ export function ProjectSidebar({
               ) : (
                 <ScrollArea className="h-full">
                   <div className="space-y-0.5">
-                    {sharedProjects.map((project) => (
-                      <Link
-                        key={project.id}
-                        href={`/editor/${project.id}`}
-                        className="flex items-center px-3 py-2 rounded-xl hover:bg-elevated"
-                      >
-                        <span className="flex-1 text-sm text-copy-primary truncate">
-                          {project.name}
-                        </span>
-                      </Link>
-                    ))}
+                    {sharedProjects.map((project) => {
+                      const isActive = project.id === activeProjectId;
+                      return (
+                        <Link
+                          key={project.id}
+                          href={`/editor/${project.id}`}
+                          className={`flex items-center px-3 py-2 rounded-xl ${
+                            isActive ? "bg-brand-dim" : "hover:bg-elevated"
+                          }`}
+                        >
+                          <span
+                            className={`flex-1 text-sm truncate ${
+                              isActive ? "text-brand" : "text-copy-primary"
+                            }`}
+                          >
+                            {project.name}
+                          </span>
+                        </Link>
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               )}
