@@ -75,6 +75,8 @@
 }
 
 :root {
+    color-scheme: dark;
+
     /* App palette */
     --bg-base: #080809;
     --bg-surface: #111114;

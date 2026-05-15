@@ -12,6 +12,14 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Feature 04 — Project Dialogs & Editor Home**
+  - Created `lib/mock-projects.ts`: `MockProject` interface + 2 owned / 1 shared mock records
+  - Created `hooks/use-project-dialogs.ts`: manages dialog type, selected project, name form state, slug derivation, open/close helpers
+  - Created `components/editor/project-dialogs.tsx`: `CreateProjectDialog` (name input + live slug preview), `RenameProjectDialog` (prefilled, auto-focus, Enter submits), `DeleteProjectDialog` (destructive confirm, no input)
+  - Updated `components/editor/project-sidebar.tsx`: project list from mock data, rename/delete hover actions on owned projects only, shared tab shows no actions, mobile backdrop scrim (z-30, `lg:hidden`, tap closes sidebar), "New Project" button wired to `onCreateProject`
+  - Updated `components/editor/editor-shell.tsx`: editor home content (heading, description, New Project button), `useProjectDialogs` hook wired to sidebar + all three dialogs
+  - Build verified: `npm run build` compiles and type-checks cleanly
+
 - **Feature 03 — Auth**
   - Installed `@clerk/ui`; added `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` to `.env.local`
   - Created `proxy.ts` at project root: `clerkMiddleware` with `createRouteMatcher` protecting all routes except sign-in/sign-up paths; exports `proxy` (Next.js 16 rename of `middleware`)
@@ -44,7 +52,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 04 (check `context/feature-specs/` for next spec).
+- Feature 05 (check `context/feature-specs/` for next spec).
 
 ## Open Questions
 
