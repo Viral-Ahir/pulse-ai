@@ -6,6 +6,7 @@ import { useProjectActions } from "@/hooks/use-project-actions";
 import type { ProjectListItem } from "@/lib/projects";
 
 import { AiSidebar } from "./ai-sidebar";
+import { CanvasWrapper } from "./canvas-wrapper";
 import { EditorNavbar } from "./editor-navbar";
 import {
   CreateProjectDialog,
@@ -61,8 +62,8 @@ export function WorkspaceShell({
       />
 
       <main className="pt-12 h-full">
-        <div className="h-full bg-base flex items-center justify-center">
-          <p className="text-sm text-copy-faint">Canvas coming soon</p>
+        <div className="h-full bg-base">
+          <CanvasWrapper roomId={projectId} />
         </div>
       </main>
 
