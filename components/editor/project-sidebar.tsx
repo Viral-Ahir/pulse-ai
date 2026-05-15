@@ -1,31 +1,31 @@
 "use client";
 
+import Link from "next/link";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { MockProject } from "@/lib/mock-projects";
+import type { ProjectListItem } from "@/lib/projects";
 
 interface ProjectSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  projects: MockProject[];
+  ownedProjects: ProjectListItem[];
+  sharedProjects: ProjectListItem[];
   onCreateProject: () => void;
-  onRenameProject: (project: MockProject) => void;
-  onDeleteProject: (project: MockProject) => void;
+  onRenameProject: (project: ProjectListItem) => void;
+  onDeleteProject: (project: ProjectListItem) => void;
 }
 
 export function ProjectSidebar({
   isOpen,
   onClose,
-  projects,
+  ownedProjects,
+  sharedProjects,
   onCreateProject,
   onRenameProject,
   onDeleteProject,
 }: ProjectSidebarProps) {
-  const ownedProjects = projects.filter((p) => p.isOwned);
-  const sharedProjects = projects.filter((p) => !p.isOwned);
-
   return (
     <>
       {/* Mobile backdrop scrim */}
@@ -75,11 +75,14 @@ export function ProjectSidebar({
                     {ownedProjects.map((project) => (
                       <div
                         key={project.id}
-                        className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-elevated cursor-pointer"
+                        className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-elevated"
                       >
-                        <span className="flex-1 text-sm text-copy-primary truncate">
+                        <Link
+                          href={`/editor/${project.id}`}
+                          className="flex-1 text-sm text-copy-primary truncate"
+                        >
                           {project.name}
-                        </span>
+                        </Link>
                         <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
                           <Button
                             variant="ghost"
@@ -120,14 +123,15 @@ export function ProjectSidebar({
                 <ScrollArea className="h-full">
                   <div className="space-y-0.5">
                     {sharedProjects.map((project) => (
-                      <div
+                      <Link
                         key={project.id}
-                        className="flex items-center px-3 py-2 rounded-xl hover:bg-elevated cursor-pointer"
+                        href={`/editor/${project.id}`}
+                        className="flex items-center px-3 py-2 rounded-xl hover:bg-elevated"
                       >
                         <span className="flex-1 text-sm text-copy-primary truncate">
                           {project.name}
                         </span>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </ScrollArea>

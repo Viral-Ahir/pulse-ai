@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { MockProject } from "@/lib/mock-projects";
+import type { ProjectListItem } from "@/lib/projects";
 
 interface CreateProjectDialogProps {
   open: boolean;
   name: string;
-  slug: string;
+  roomId: string;
+  isLoading: boolean;
+  error: string | null;
   onNameChange: (name: string) => void;
   onSubmit: () => void;
   onClose: () => void;
@@ -24,17 +26,20 @@ interface CreateProjectDialogProps {
 export function CreateProjectDialog({
   open,
   name,
-  slug,
+  roomId,
+  isLoading,
+  error,
   onNameChange,
   onSubmit,
   onClose,
 }: CreateProjectDialogProps) {
+  const canSubmit = name.trim().length > 0 && !isLoading;
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && name.trim()) onSubmit();
+    if (e.key === "Enter" && canSubmit) onSubmit();
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && !isLoading) onClose(); }}>
       <DialogContent className="rounded-3xl bg-surface border-surface-border sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-copy-primary">New Project</DialogTitle>
@@ -49,18 +54,22 @@ export function CreateProjectDialog({
             onChange={(e) => onNameChange(e.target.value)}
             onKeyDown={handleKeyDown}
             className="text-copy-primary"
+            disabled={isLoading}
             autoFocus
           />
-          {name.trim() && (
-            <p className="text-xs text-copy-faint font-mono px-1">/{slug}</p>
+          {roomId && (
+            <p className="text-xs text-copy-faint font-mono px-1">/{roomId}</p>
+          )}
+          {error && (
+            <p className="text-xs text-error px-1">{error}</p>
           )}
         </div>
         <DialogFooter className="rounded-b-3xl">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button disabled={!name.trim()} onClick={onSubmit}>
-            Create Project
+          <Button disabled={!canSubmit} onClick={onSubmit}>
+            {isLoading ? "Creating..." : "Create Project"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -70,8 +79,10 @@ export function CreateProjectDialog({
 
 interface RenameProjectDialogProps {
   open: boolean;
-  project: MockProject | null;
+  project: ProjectListItem | null;
   name: string;
+  isLoading: boolean;
+  error: string | null;
   onNameChange: (name: string) => void;
   onSubmit: () => void;
   onClose: () => void;
@@ -81,16 +92,19 @@ export function RenameProjectDialog({
   open,
   project,
   name,
+  isLoading,
+  error,
   onNameChange,
   onSubmit,
   onClose,
 }: RenameProjectDialogProps) {
+  const canSubmit = name.trim().length > 0 && !isLoading;
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && name.trim()) onSubmit();
+    if (e.key === "Enter" && canSubmit) onSubmit();
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && !isLoading) onClose(); }}>
       <DialogContent className="rounded-3xl bg-surface border-surface-border sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-copy-primary">Rename Project</DialogTitle>
@@ -98,21 +112,25 @@ export function RenameProjectDialog({
             Renaming &ldquo;{project?.name}&rdquo;
           </DialogDescription>
         </DialogHeader>
-        <div className="py-1">
+        <div className="space-y-2 py-1">
           <Input
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             onKeyDown={handleKeyDown}
             className="text-copy-primary"
+            disabled={isLoading}
             autoFocus
           />
+          {error && (
+            <p className="text-xs text-error px-1">{error}</p>
+          )}
         </div>
         <DialogFooter className="rounded-b-3xl">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button disabled={!name.trim()} onClick={onSubmit}>
-            Rename
+          <Button disabled={!canSubmit} onClick={onSubmit}>
+            {isLoading ? "Renaming..." : "Rename"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -122,7 +140,9 @@ export function RenameProjectDialog({
 
 interface DeleteProjectDialogProps {
   open: boolean;
-  project: MockProject | null;
+  project: ProjectListItem | null;
+  isLoading: boolean;
+  error: string | null;
   onSubmit: () => void;
   onClose: () => void;
 }
@@ -130,11 +150,13 @@ interface DeleteProjectDialogProps {
 export function DeleteProjectDialog({
   open,
   project,
+  isLoading,
+  error,
   onSubmit,
   onClose,
 }: DeleteProjectDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && !isLoading) onClose(); }}>
       <DialogContent className="rounded-3xl bg-surface border-surface-border sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-copy-primary">Delete Project</DialogTitle>
@@ -143,12 +165,15 @@ export function DeleteProjectDialog({
             action cannot be undone.
           </DialogDescription>
         </DialogHeader>
+        {error && (
+          <p className="text-xs text-error px-1">{error}</p>
+        )}
         <DialogFooter className="rounded-b-3xl">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onSubmit}>
-            Delete Project
+          <Button variant="destructive" onClick={onSubmit} disabled={isLoading}>
+            {isLoading ? "Deleting..." : "Delete Project"}
           </Button>
         </DialogFooter>
       </DialogContent>
