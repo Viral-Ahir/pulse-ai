@@ -10,45 +10,17 @@ import {
   RenameProjectDialog,
   DeleteProjectDialog,
 } from "./project-dialogs";
-import { useProjectDialogs } from "@/hooks/use-project-dialogs";
-import { MOCK_PROJECTS, toSlug, type MockProject } from "@/lib/mock-projects";
+import { useProjectActions } from "@/hooks/use-project-actions";
+import type { ProjectListItem } from "@/lib/projects";
 
-export function EditorShell() {
+interface EditorShellProps {
+  ownedProjects: ProjectListItem[];
+  sharedProjects: ProjectListItem[];
+}
+
+export function EditorShell({ ownedProjects, sharedProjects }: EditorShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [projects, setProjects] = useState<MockProject[]>(MOCK_PROJECTS);
-  const dialogs = useProjectDialogs();
-
-  const handleCreateSubmit = () => {
-    const name = dialogs.name.trim();
-    if (!name) return;
-    const newProject: MockProject = {
-      id: crypto.randomUUID(),
-      name,
-      slug: toSlug(name),
-      isOwned: true,
-    };
-    setProjects((prev) => [...prev, newProject]);
-    dialogs.close();
-  };
-
-  const handleRenameSubmit = () => {
-    const name = dialogs.name.trim();
-    if (!name || !dialogs.project) return;
-    const id = dialogs.project.id;
-    setProjects((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, name, slug: toSlug(name) } : p,
-      ),
-    );
-    dialogs.close();
-  };
-
-  const handleDeleteSubmit = () => {
-    if (!dialogs.project) return;
-    const id = dialogs.project.id;
-    setProjects((prev) => prev.filter((p) => p.id !== id));
-    dialogs.close();
-  };
+  const actions = useProjectActions();
 
   return (
     <div className="h-screen bg-base">
@@ -59,10 +31,11 @@ export function EditorShell() {
       <ProjectSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        projects={projects}
-        onCreateProject={dialogs.openCreate}
-        onRenameProject={dialogs.openRename}
-        onDeleteProject={dialogs.openDelete}
+        ownedProjects={ownedProjects}
+        sharedProjects={sharedProjects}
+        onCreateProject={actions.openCreate}
+        onRenameProject={actions.openRename}
+        onDeleteProject={actions.openDelete}
       />
       <main className="pt-12 h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center px-4">
@@ -73,7 +46,7 @@ export function EditorShell() {
             Start a new architecture workspace, or choose a project from the
             sidebar.
           </p>
-          <Button className="gap-2" onClick={dialogs.openCreate}>
+          <Button className="gap-2" onClick={actions.openCreate}>
             <Plus className="h-4 w-4" />
             New Project
           </Button>
@@ -81,26 +54,32 @@ export function EditorShell() {
       </main>
 
       <CreateProjectDialog
-        open={dialogs.dialogType === "create"}
-        name={dialogs.name}
-        slug={dialogs.slug}
-        onNameChange={dialogs.setName}
-        onSubmit={handleCreateSubmit}
-        onClose={dialogs.close}
+        open={actions.dialogType === "create"}
+        name={actions.name}
+        roomId={actions.roomId}
+        isLoading={actions.isLoading}
+        error={actions.error}
+        onNameChange={actions.setName}
+        onSubmit={actions.submitCreate}
+        onClose={actions.close}
       />
       <RenameProjectDialog
-        open={dialogs.dialogType === "rename"}
-        project={dialogs.project}
-        name={dialogs.name}
-        onNameChange={dialogs.setName}
-        onSubmit={handleRenameSubmit}
-        onClose={dialogs.close}
+        open={actions.dialogType === "rename"}
+        project={actions.project}
+        name={actions.name}
+        isLoading={actions.isLoading}
+        error={actions.error}
+        onNameChange={actions.setName}
+        onSubmit={actions.submitRename}
+        onClose={actions.close}
       />
       <DeleteProjectDialog
-        open={dialogs.dialogType === "delete"}
-        project={dialogs.project}
-        onSubmit={handleDeleteSubmit}
-        onClose={dialogs.close}
+        open={actions.dialogType === "delete"}
+        project={actions.project}
+        isLoading={actions.isLoading}
+        error={actions.error}
+        onSubmit={actions.submitDelete}
+        onClose={actions.close}
       />
     </div>
   );
