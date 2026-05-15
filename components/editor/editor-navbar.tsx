@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  LayoutTemplate,
   PanelLeftClose,
   PanelLeftOpen,
   Share2,
@@ -17,6 +18,7 @@ interface EditorNavbarProps {
   aiSidebarOpen?: boolean;
   onToggleAiSidebar?: () => void;
   onShare?: () => void;
+  onOpenTemplates?: () => void;
 }
 
 export function EditorNavbar({
@@ -26,6 +28,7 @@ export function EditorNavbar({
   aiSidebarOpen,
   onToggleAiSidebar,
   onShare,
+  onOpenTemplates,
 }: EditorNavbarProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-12 flex items-center px-3 bg-surface border-b border-surface-border">
@@ -51,6 +54,17 @@ export function EditorNavbar({
         )}
       </div>
       <div className="flex items-center gap-1">
+        {onOpenTemplates && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenTemplates}
+            className="h-8 gap-2 text-copy-muted hover:text-copy-primary"
+          >
+            <LayoutTemplate className="h-4 w-4" />
+            Templates
+          </Button>
+        )}
         {onShare && (
           <Button
             variant="ghost"

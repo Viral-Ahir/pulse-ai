@@ -14,22 +14,36 @@ import { Canvas } from "./canvas";
 
 interface CanvasWrapperProps {
   roomId: string;
+  templatesOpen: boolean;
+  onTemplatesClose: () => void;
 }
 
-export function CanvasWrapper({ roomId }: CanvasWrapperProps) {
+export function CanvasWrapper({
+  roomId,
+  templatesOpen,
+  onTemplatesClose,
+}: CanvasWrapperProps) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
         id={roomId}
         initialPresence={{ cursor: null, isThinking: false }}
       >
-        <CanvasRoom />
+        <CanvasRoom
+          templatesOpen={templatesOpen}
+          onTemplatesClose={onTemplatesClose}
+        />
       </RoomProvider>
     </LiveblocksProvider>
   );
 }
 
-function CanvasRoom() {
+interface CanvasRoomProps {
+  templatesOpen: boolean;
+  onTemplatesClose: () => void;
+}
+
+function CanvasRoom({ templatesOpen, onTemplatesClose }: CanvasRoomProps) {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useErrorListener((error) => {
@@ -61,7 +75,10 @@ function CanvasRoom() {
 
   return (
     <ClientSideSuspense fallback={<CanvasLoading />}>
-      <Canvas />
+      <Canvas
+        templatesOpen={templatesOpen}
+        onTemplatesClose={onTemplatesClose}
+      />
     </ClientSideSuspense>
   );
 }

@@ -34,6 +34,7 @@ export function WorkspaceShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [aiSidebarOpen, setAiSidebarOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const actions = useProjectActions();
 
   return (
@@ -45,6 +46,7 @@ export function WorkspaceShell({
         aiSidebarOpen={aiSidebarOpen}
         onToggleAiSidebar={() => setAiSidebarOpen((v) => !v)}
         onShare={() => setShareOpen(true)}
+        onOpenTemplates={() => setTemplatesOpen(true)}
       />
       <ProjectSidebar
         isOpen={sidebarOpen}
@@ -63,7 +65,11 @@ export function WorkspaceShell({
 
       <main className="pt-12 h-full">
         <div className="h-full bg-base">
-          <CanvasWrapper roomId={projectId} />
+          <CanvasWrapper
+            roomId={projectId}
+            templatesOpen={templatesOpen}
+            onTemplatesClose={() => setTemplatesOpen(false)}
+          />
         </div>
       </main>
 
