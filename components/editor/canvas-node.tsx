@@ -104,7 +104,7 @@ export function CanvasNodeRenderer({
   );
 
   const handleClassName =
-    "!h-2 !w-2 !rounded-full !border !border-base !bg-copy-primary opacity-0 transition-opacity duration-100 group-hover:opacity-100";
+    "!h-2! w-2! rounded-full! border! border-base! bg-copy-primary! opacity-0 transition-opacity duration-100 group-hover:opacity-100";
 
   return (
     <div
