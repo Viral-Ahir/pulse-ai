@@ -4,13 +4,34 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 07: Wire Editor Home — Complete
+- Feature 09: Share Dialog — Complete
 
 ## Current Goal
 
 - Begin next feature (check `context/feature-specs/` for next spec).
 
 ## Completed
+
+- **Feature 09 — Share Dialog**
+  - Created `lib/collaborators.ts` (`import "server-only"`): `CollaboratorWithUser` type + `enrichCollaborators(rows)` — calls `clerkClient().users.getUserList({ emailAddress })` to look up Clerk users by email, builds an email→user map (lowercased), merges `firstName + lastName` into `displayName`, exposes `imageUrl`. Falls back to email-only if the Clerk call throws
+  - Created `app/api/projects/[projectId]/collaborators/route.ts`: `GET` returns the enriched collaborator list (owner OR collaborator email match required — `403` otherwise, `404` if project missing); `POST` validates body email with `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`, lowercases + trims, returns `409` on duplicate via `findUnique({ projectId_email })`, otherwise creates the row and returns the single enriched record with `201`. Owner-only mutation (`403` for collaborators)
+  - Created `app/api/projects/[projectId]/collaborators/[collaboratorId]/route.ts`: `DELETE` enforces owner-only, verifies the collaborator belongs to the project (defense against ID guessing across projects), then deletes and returns `204`
+  - Created `hooks/use-share.ts`: `useShare(projectId, open)` — refetches the collaborator list when the dialog opens, tracks `inviteEmail`/`isInviting`/`removingId`/`error`, exposes `invite`, `remove`, and `copyLink` (writes `${window.location.origin}/editor/${projectId}` to the clipboard and flips `copied` to `true` for 1500ms). Clears the error and email when the dialog closes
+  - Created `components/editor/share-dialog.tsx`: shadcn `Dialog` with read-only project link + copy button (`Copy` → `Check` + "Copied!" while flagged), email invite row (owners only, Enter submits), error line, and scrolling collaborator list. Each row renders an avatar (Clerk `imageUrl` via `<img>` or an initial fallback in `bg-elevated`), display name with email subtext, and a `Trash2` remove button visible only to owners. The link is computed in a `useEffect` (`window.location.origin`) so it remains stable across renders
+  - Updated `components/editor/editor-navbar.tsx` (no change here — Feature 08 already added the optional `onShare` prop; the navbar now opens the dialog because the workspace shell passes a real handler)
+  - Updated `components/editor/workspace-shell.tsx`: added required `isOwner` prop, `shareOpen` state, wired `onShare` to open it, and rendered `<ShareDialog>` at the bottom
+  - Updated `app/editor/[roomId]/page.tsx`: passes `isOwner={project.isOwner}` from `AccessibleProject` to `WorkspaceShell`. No new server queries — `getProjectIfAccessible` already returns `isOwner`
+  - Build verified: `npm run build` compiles and type-checks cleanly; both `/api/projects/[projectId]/collaborators` and `.../collaborators/[collaboratorId]` register as dynamic routes
+
+- **Feature 08 — Editor Workspace Shell**
+  - Created `lib/project-access.ts` (`import "server-only"`): `CurrentIdentity` type, `getCurrentIdentity()` returns `{ userId, email }` from Clerk (or `null`), `AccessibleProject` type, `getProjectIfAccessible(projectId, identity)` looks up the project and returns it only if the identity is the owner or a collaborator (email match) — returns `null` for missing project OR forbidden access so the page can route both to `AccessDenied`
+  - Created `components/editor/access-denied.tsx`: centered card with `Lock` icon in a `bg-elevated` rounded tile, headline, message, and `Back to projects` link styled with `buttonVariants({ variant: "outline" })` (the local shadcn `Button` doesn't accept `asChild`, so the variant classes are applied to `next/link` directly)
+  - Created `app/editor/[roomId]/page.tsx`: async server component. Awaits `params`, calls `getCurrentIdentity()` and `redirect("/sign-in")` if unauthenticated, calls `getProjectIfAccessible(roomId, identity)` and renders `AccessDenied` when `null`. On success, fetches `getProjectsForUser()` and renders `WorkspaceShell`
+  - Created `components/editor/workspace-shell.tsx`: client component composing `EditorNavbar` + `ProjectSidebar` + `AiSidebar` + canvas placeholder. Owns `sidebarOpen` and `aiSidebarOpen` state. Wires `useProjectActions()` to the sidebar so create/rename/delete still work from the workspace (the hook already redirects to `/editor` when the active project is deleted)
+  - Created `components/editor/ai-sidebar.tsx`: right-side floating overlay (`fixed top-12 right-0 w-80 z-40`, `border-l`), CSS `translate-x` slide-in from the right (mirrors `ProjectSidebar`), mobile backdrop scrim, placeholder body with `Sparkles` icon + "AI chat coming soon"
+  - Updated `components/editor/editor-navbar.tsx`: added optional `projectName`, `aiSidebarOpen`, `onToggleAiSidebar`, `onShare` props. Center section shows project name when provided; right section renders `Share2` button when `onShare` is passed and a `Sparkles` toggle when `onToggleAiSidebar` is passed (active state uses `text-ai-text`). Editor home behavior unchanged because the new props are optional
+  - Updated `components/editor/project-sidebar.tsx`: added optional `activeProjectId`. Active row in both owned + shared lists gets `bg-brand-dim` background and `text-brand` label (replaces the `hover:bg-elevated` state for that row only)
+  - Build verified: `npm run build` compiles and type-checks cleanly; `/editor/[roomId]` registers as a dynamic route
 
 - **Feature 07 — Wire Editor Home**
   - Created `lib/slug.ts`: `toSlug`, `generateSuffix` (6-char alphanumeric), `buildRoomId(name, suffix)` — pure helpers shared between hook and dialog
@@ -79,7 +100,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Begin next feature (check `context/feature-specs/` for next spec). The `/editor/[projectId]` route is referenced by the sidebar links and by the post-create navigation but does not exist yet — the next workspace spec should add it.
+- Begin next feature (check `context/feature-specs/` for next spec). The canvas is still a placeholder — the next spec will add real canvas content (Liveblocks + React Flow). Collaborators can now load a project, but they share the same placeholder workspace as the owner.
 
 ## Open Questions
 
@@ -97,3 +118,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Prisma uses multi-file schemas (`prisma.config.ts` → `schema: "prisma/"`); add new models as `prisma/models/*.prisma`. Generator output `app/generated/prisma/` is gitignored — import client via `@/app/generated/prisma/client`.
 - Project ID === Liveblocks room ID. The id is generated client-side as `${toSlug(name)}-${6charSuffix}` and passed as `id` in `POST /api/projects`. The API validates `^[a-z0-9-]+$` and returns `409` on collision.
 - Server-only data helpers live in `lib/projects.ts` (guarded with `import "server-only"`). Client-side imports of the `ProjectListItem` type still work via `import type`.
+- Workspace access checks live in `lib/project-access.ts` (also `import "server-only"`): `getCurrentIdentity()` resolves Clerk userId + primary email, and `getProjectIfAccessible(projectId, identity)` returns the project only when the caller is the owner or a collaborator. Missing project and unauthorized access both return `null` so callers route to a single `AccessDenied` UI.
+- The shadcn `Button` in this project wraps `@base-ui/react/button` and does not support `asChild`. To style a link like a button, apply `buttonVariants({ variant })` directly to `next/link`.
+- Collaborator enrichment with Clerk: bulk-fetch via `clerkClient().users.getUserList({ emailAddress })`, then build an email-to-user map keyed lowercased. There is no local user table — emails are the source of truth in Postgres (`ProjectCollaborator`) and Clerk data is fetched on demand. The `lib/collaborators.ts` helper wraps the Clerk call in try/catch and falls back to email-only so a Clerk outage doesn't break the list.
+- Collaborator API surface: `GET /api/projects/[projectId]/collaborators` (owner or collaborator), `POST` same path (owner-only invite, validates email regex + 409 on duplicate), `DELETE /api/projects/[projectId]/collaborators/[collaboratorId]` (owner-only, verifies the row belongs to the project before deleting).
