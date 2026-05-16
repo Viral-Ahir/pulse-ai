@@ -10,28 +10,37 @@ import {
 } from "@liveblocks/react/suspense";
 import { AlertCircle } from "lucide-react";
 
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
+
 import { Canvas } from "./canvas";
 
 interface CanvasWrapperProps {
   roomId: string;
   templatesOpen: boolean;
   onTemplatesClose: () => void;
+  onSaveStatusChange?: (status: CanvasSaveStatus) => void;
+  onSaveHandlerReady?: (handler: () => Promise<void>) => void;
 }
 
 export function CanvasWrapper({
   roomId,
   templatesOpen,
   onTemplatesClose,
+  onSaveStatusChange,
+  onSaveHandlerReady,
 }: CanvasWrapperProps) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
         id={roomId}
-        initialPresence={{ cursor: null, isThinking: false }}
+        initialPresence={{ cursor: null, thinking: false }}
       >
         <CanvasRoom
+          roomId={roomId}
           templatesOpen={templatesOpen}
           onTemplatesClose={onTemplatesClose}
+          onSaveStatusChange={onSaveStatusChange}
+          onSaveHandlerReady={onSaveHandlerReady}
         />
       </RoomProvider>
     </LiveblocksProvider>
@@ -39,11 +48,20 @@ export function CanvasWrapper({
 }
 
 interface CanvasRoomProps {
+  roomId: string;
   templatesOpen: boolean;
   onTemplatesClose: () => void;
+  onSaveStatusChange?: (status: CanvasSaveStatus) => void;
+  onSaveHandlerReady?: (handler: () => Promise<void>) => void;
 }
 
-function CanvasRoom({ templatesOpen, onTemplatesClose }: CanvasRoomProps) {
+function CanvasRoom({
+  roomId,
+  templatesOpen,
+  onTemplatesClose,
+  onSaveStatusChange,
+  onSaveHandlerReady,
+}: CanvasRoomProps) {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useErrorListener((error) => {
@@ -76,8 +94,11 @@ function CanvasRoom({ templatesOpen, onTemplatesClose }: CanvasRoomProps) {
   return (
     <ClientSideSuspense fallback={<CanvasLoading />}>
       <Canvas
+        projectId={roomId}
         templatesOpen={templatesOpen}
         onTemplatesClose={onTemplatesClose}
+        onSaveStatusChange={onSaveStatusChange}
+        onSaveHandlerReady={onSaveHandlerReady}
       />
     </ClientSideSuspense>
   );

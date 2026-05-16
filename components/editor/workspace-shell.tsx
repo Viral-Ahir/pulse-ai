@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { useProjectActions } from "@/hooks/use-project-actions";
 import type { ProjectListItem } from "@/lib/projects";
 
@@ -35,6 +36,17 @@ export function WorkspaceShell({
   const [aiSidebarOpen, setAiSidebarOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<CanvasSaveStatus>("idle");
+  const saveHandlerRef = useRef<(() => Promise<void>) | null>(null);
+  const handleSaveHandlerReady = useCallback(
+    (handler: () => Promise<void>) => {
+      saveHandlerRef.current = handler;
+    },
+    [],
+  );
+  const handleManualSave = useCallback(() => {
+    void saveHandlerRef.current?.();
+  }, []);
   const actions = useProjectActions();
 
   return (
@@ -47,6 +59,9 @@ export function WorkspaceShell({
         onToggleAiSidebar={() => setAiSidebarOpen((v) => !v)}
         onShare={() => setShareOpen(true)}
         onOpenTemplates={() => setTemplatesOpen(true)}
+        hideUserButton
+        saveStatus={saveStatus}
+        onSave={handleManualSave}
       />
       <ProjectSidebar
         isOpen={sidebarOpen}
@@ -69,6 +84,8 @@ export function WorkspaceShell({
             roomId={projectId}
             templatesOpen={templatesOpen}
             onTemplatesClose={() => setTemplatesOpen(false)}
+            onSaveStatusChange={setSaveStatus}
+            onSaveHandlerReady={handleSaveHandlerReady}
           />
         </div>
       </main>
