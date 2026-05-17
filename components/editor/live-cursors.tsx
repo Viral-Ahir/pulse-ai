@@ -5,6 +5,7 @@ import {
   useOther,
   useOthersConnectionIds,
 } from "@liveblocks/react/suspense";
+import { Loader2 } from "lucide-react";
 
 export function LiveCursors() {
   const connectionIds = useOthersConnectionIds();
@@ -21,6 +22,7 @@ export function LiveCursors() {
 function RemoteCursor({ connectionId }: { connectionId: number }) {
   const data = useOther(connectionId, (other) => ({
     cursor: other.presence.cursor,
+    thinking: other.presence.thinking,
     name: other.info.name,
     color: other.info.color,
   }));
@@ -42,10 +44,16 @@ function RemoteCursor({ connectionId }: { connectionId: number }) {
     >
       <CursorIcon color={data.color} />
       <div
-        className="ml-3 -mt-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-medium leading-none text-white whitespace-nowrap"
+        className="ml-3 -mt-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium leading-none text-white whitespace-nowrap"
         style={{ backgroundColor: data.color }}
       >
-        {data.name}
+        <span>{data.name}</span>
+        {data.thinking && (
+          <Loader2
+            className="h-3 w-3 animate-spin"
+            aria-label={`${data.name} is thinking`}
+          />
+        )}
       </div>
     </div>
   );

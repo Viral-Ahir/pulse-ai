@@ -24,8 +24,18 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-export const prisma: PrismaClient =
-  globalForPrisma.prisma ?? createPrismaClient();
+function isFreshClient(client: PrismaClient | undefined): client is PrismaClient {
+  if (!client) return false;
+  // Detect a stale dev-mode singleton (instantiated before a schema migration
+  // added a new model). When `projectSpec` / `taskRun` are missing, we have
+  // to recreate so the new delegates are wired up.
+  const c = client as unknown as Record<string, unknown>;
+  return c.projectSpec !== undefined && c.taskRun !== undefined;
+}
+
+export const prisma: PrismaClient = isFreshClient(globalForPrisma.prisma)
+  ? globalForPrisma.prisma
+  : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

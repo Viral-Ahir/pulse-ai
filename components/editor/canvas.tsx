@@ -43,6 +43,7 @@ import {
   type ShapeDragPayload,
 } from "@/types/canvas";
 
+import { AiStatusBanner } from "./ai-status-banner";
 import { CanvasControls } from "./canvas-controls";
 import { CanvasEdgeRenderer } from "./canvas-edge";
 import { CanvasNodeRenderer } from "./canvas-node";
@@ -315,6 +316,7 @@ function CanvasSurface({
       </ReactFlow>
       <LiveCursors />
       <PresenceAvatars />
+      <AiStatusBanner />
       <CanvasControls />
       <ShapePanel />
       <StarterTemplatesModal

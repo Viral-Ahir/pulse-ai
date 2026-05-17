@@ -4,8 +4,6 @@ import { useState } from "react";
 
 import {
   ClientSideSuspense,
-  LiveblocksProvider,
-  RoomProvider,
   useErrorListener,
 } from "@liveblocks/react/suspense";
 import { AlertCircle } from "lucide-react";
@@ -29,39 +27,6 @@ export function CanvasWrapper({
   onSaveStatusChange,
   onSaveHandlerReady,
 }: CanvasWrapperProps) {
-  return (
-    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider
-        id={roomId}
-        initialPresence={{ cursor: null, thinking: false }}
-      >
-        <CanvasRoom
-          roomId={roomId}
-          templatesOpen={templatesOpen}
-          onTemplatesClose={onTemplatesClose}
-          onSaveStatusChange={onSaveStatusChange}
-          onSaveHandlerReady={onSaveHandlerReady}
-        />
-      </RoomProvider>
-    </LiveblocksProvider>
-  );
-}
-
-interface CanvasRoomProps {
-  roomId: string;
-  templatesOpen: boolean;
-  onTemplatesClose: () => void;
-  onSaveStatusChange?: (status: CanvasSaveStatus) => void;
-  onSaveHandlerReady?: (handler: () => Promise<void>) => void;
-}
-
-function CanvasRoom({
-  roomId,
-  templatesOpen,
-  onTemplatesClose,
-  onSaveStatusChange,
-  onSaveHandlerReady,
-}: CanvasRoomProps) {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useErrorListener((error) => {

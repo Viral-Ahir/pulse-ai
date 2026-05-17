@@ -2,6 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 
+import {
+  LiveblocksProvider,
+  RoomProvider,
+} from "@liveblocks/react/suspense";
+
 import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { useProjectActions } from "@/hooks/use-project-actions";
 import type { ProjectListItem } from "@/lib/projects";
@@ -50,8 +55,13 @@ export function WorkspaceShell({
   const actions = useProjectActions();
 
   return (
-    <div className="h-screen bg-base overflow-hidden">
-      <EditorNavbar
+    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
+      <RoomProvider
+        id={projectId}
+        initialPresence={{ cursor: null, thinking: false }}
+      >
+        <div className="h-screen bg-base overflow-hidden">
+          <EditorNavbar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((v) => !v)}
         projectName={projectName}
@@ -76,6 +86,8 @@ export function WorkspaceShell({
       <AiSidebar
         isOpen={aiSidebarOpen}
         onClose={() => setAiSidebarOpen(false)}
+        projectId={projectId}
+        roomId={projectId}
       />
 
       <main className="pt-12 h-full">
@@ -124,6 +136,8 @@ export function WorkspaceShell({
         isOwner={isOwner}
         onClose={() => setShareOpen(false)}
       />
-    </div>
+        </div>
+      </RoomProvider>
+    </LiveblocksProvider>
   );
 }

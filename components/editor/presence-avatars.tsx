@@ -2,6 +2,7 @@
 
 import { UserButton, useUser } from "@clerk/nextjs";
 import { shallow, useOthersMapped } from "@liveblocks/react/suspense";
+import { Bot } from "lucide-react";
 
 const MAX_VISIBLE = 5;
 const AVATAR_SIZE_CLASS = "h-7 w-7";
@@ -10,6 +11,7 @@ interface CollaboratorInfo {
   name: string;
   avatar: string;
   color: string;
+  isAi?: boolean;
 }
 
 export function PresenceAvatars() {
@@ -63,7 +65,9 @@ function CollaboratorAvatar({ info }: { info: CollaboratorInfo }) {
       title={info.name}
       aria-label={info.name}
     >
-      {info.avatar ? (
+      {info.isAi ? (
+        <Bot className="h-3.5 w-3.5" aria-hidden="true" />
+      ) : info.avatar ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={info.avatar}

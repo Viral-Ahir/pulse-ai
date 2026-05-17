@@ -13,10 +13,17 @@ declare global {
         name: string;
         avatar: string;
         color: string;
+        isAi?: boolean;
       };
     };
 
-    RoomEvent: {};
+    RoomEvent:
+      | {
+          type: "ai-status";
+          runId: string;
+          phase: "starting" | "processing" | "complete" | "error";
+          message: string;
+        };
 
     ThreadMetadata: {};
 
