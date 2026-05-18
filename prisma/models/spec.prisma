@@ -1,0 +1,8 @@
+model ProjectSpec {
+  id        String   @id @default(cuid())
+  projectId String
+  filePath  String
+  createdAt DateTime @default(now())
+
+  @@index([projectId, createdAt])
+}

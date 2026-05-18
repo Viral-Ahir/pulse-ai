@@ -4,11 +4,11 @@ import { useState } from "react";
 
 import {
   ClientSideSuspense,
-  LiveblocksProvider,
-  RoomProvider,
   useErrorListener,
 } from "@liveblocks/react/suspense";
 import { AlertCircle } from "lucide-react";
+
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 
 import { Canvas } from "./canvas";
 
@@ -16,34 +16,17 @@ interface CanvasWrapperProps {
   roomId: string;
   templatesOpen: boolean;
   onTemplatesClose: () => void;
+  onSaveStatusChange?: (status: CanvasSaveStatus) => void;
+  onSaveHandlerReady?: (handler: () => Promise<void>) => void;
 }
 
 export function CanvasWrapper({
   roomId,
   templatesOpen,
   onTemplatesClose,
+  onSaveStatusChange,
+  onSaveHandlerReady,
 }: CanvasWrapperProps) {
-  return (
-    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider
-        id={roomId}
-        initialPresence={{ cursor: null, isThinking: false }}
-      >
-        <CanvasRoom
-          templatesOpen={templatesOpen}
-          onTemplatesClose={onTemplatesClose}
-        />
-      </RoomProvider>
-    </LiveblocksProvider>
-  );
-}
-
-interface CanvasRoomProps {
-  templatesOpen: boolean;
-  onTemplatesClose: () => void;
-}
-
-function CanvasRoom({ templatesOpen, onTemplatesClose }: CanvasRoomProps) {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useErrorListener((error) => {
@@ -76,8 +59,11 @@ function CanvasRoom({ templatesOpen, onTemplatesClose }: CanvasRoomProps) {
   return (
     <ClientSideSuspense fallback={<CanvasLoading />}>
       <Canvas
+        projectId={roomId}
         templatesOpen={templatesOpen}
         onTemplatesClose={onTemplatesClose}
+        onSaveStatusChange={onSaveStatusChange}
+        onSaveHandlerReady={onSaveHandlerReady}
       />
     </ClientSideSuspense>
   );

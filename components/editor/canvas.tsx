@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useRef, type DragEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type MouseEvent,
+} from "react";
 
 import {
   Background,
@@ -17,8 +24,16 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { useLiveblocksFlow } from "@liveblocks/react-flow";
-import { useRedo, useUndo } from "@liveblocks/react/suspense";
+import {
+  useRedo,
+  useUndo,
+  useUpdateMyPresence,
+} from "@liveblocks/react/suspense";
 
+import {
+  useCanvasAutosave,
+  type CanvasSaveStatus,
+} from "@/hooks/use-canvas-autosave";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   DEFAULT_NODE_COLOR,
@@ -28,9 +43,12 @@ import {
   type ShapeDragPayload,
 } from "@/types/canvas";
 
+import { AiStatusBanner } from "./ai-status-banner";
 import { CanvasControls } from "./canvas-controls";
 import { CanvasEdgeRenderer } from "./canvas-edge";
 import { CanvasNodeRenderer } from "./canvas-node";
+import { LiveCursors } from "./live-cursors";
+import { PresenceAvatars } from "./presence-avatars";
 import { ShapePanel } from "./shape-panel";
 import { StarterTemplatesModal } from "./starter-templates-modal";
 import type { CanvasTemplate } from "./starter-templates";
@@ -54,22 +72,40 @@ const DEFAULT_EDGE_OPTIONS: DefaultEdgeOptions = {
 };
 
 interface CanvasProps {
+  projectId: string;
   templatesOpen: boolean;
   onTemplatesClose: () => void;
+  onSaveStatusChange?: (status: CanvasSaveStatus) => void;
+  onSaveHandlerReady?: (handler: () => Promise<void>) => void;
 }
 
-export function Canvas({ templatesOpen, onTemplatesClose }: CanvasProps) {
+export function Canvas({
+  projectId,
+  templatesOpen,
+  onTemplatesClose,
+  onSaveStatusChange,
+  onSaveHandlerReady,
+}: CanvasProps) {
   return (
     <ReactFlowProvider>
       <CanvasSurface
+        projectId={projectId}
         templatesOpen={templatesOpen}
         onTemplatesClose={onTemplatesClose}
+        onSaveStatusChange={onSaveStatusChange}
+        onSaveHandlerReady={onSaveHandlerReady}
       />
     </ReactFlowProvider>
   );
 }
 
-function CanvasSurface({ templatesOpen, onTemplatesClose }: CanvasProps) {
+function CanvasSurface({
+  projectId,
+  templatesOpen,
+  onTemplatesClose,
+  onSaveStatusChange,
+  onSaveHandlerReady,
+}: CanvasProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, onDelete } =
     useLiveblocksFlow<CanvasNode, CanvasEdge>({
       suspense: true,
@@ -80,9 +116,99 @@ function CanvasSurface({ templatesOpen, onTemplatesClose }: CanvasProps) {
   const { screenToFlowPosition, fitView } = reactFlow;
   const undo = useUndo();
   const redo = useRedo();
+  const updateMyPresence = useUpdateMyPresence();
   const dropCounterRef = useRef(0);
+  const [autosaveEnabled, setAutosaveEnabled] = useState(false);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+
+    if (nodes.length > 0 || edges.length > 0) {
+      setAutosaveEnabled(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/canvas`);
+        if (!response.ok) {
+          if (!cancelled) setAutosaveEnabled(true);
+          return;
+        }
+        const data = (await response.json()) as {
+          snapshot: { nodes: CanvasNode[]; edges: CanvasEdge[] } | null;
+        };
+
+        if (cancelled) return;
+
+        if (data.snapshot && nodes.length === 0 && edges.length === 0) {
+          if (data.snapshot.nodes.length > 0) {
+            onNodesChange(
+              data.snapshot.nodes.map((node) => ({
+                type: "add" as const,
+                item: { ...node },
+              })),
+            );
+          }
+          if (data.snapshot.edges.length > 0) {
+            onEdgesChange(
+              data.snapshot.edges.map((edge) => ({
+                type: "add" as const,
+                item: { ...edge },
+              })),
+            );
+          }
+          requestAnimationFrame(() => {
+            fitView({ duration: 300, padding: 0.2 });
+          });
+        }
+        setAutosaveEnabled(true);
+      } catch {
+        if (!cancelled) setAutosaveEnabled(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  const { status: saveStatus, saveNow } = useCanvasAutosave({
+    projectId,
+    nodes,
+    edges,
+    enabled: autosaveEnabled,
+  });
+
+  useEffect(() => {
+    onSaveStatusChange?.(saveStatus);
+  }, [saveStatus, onSaveStatusChange]);
+
+  useEffect(() => {
+    onSaveHandlerReady?.(saveNow);
+  }, [saveNow, onSaveHandlerReady]);
 
   useKeyboardShortcuts({ reactFlow, undo, redo });
+
+  const handleMouseMove = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      const cursor = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      updateMyPresence({ cursor });
+    },
+    [screenToFlowPosition, updateMyPresence],
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    updateMyPresence({ cursor: null });
+  }, [updateMyPresence]);
 
   const handleImportTemplate = useCallback(
     (template: CanvasTemplate) => {
@@ -169,6 +295,8 @@ function CanvasSurface({ templatesOpen, onTemplatesClose }: CanvasProps) {
       className="relative h-full w-full"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
       <ReactFlow
         nodes={nodes}
@@ -186,6 +314,9 @@ function CanvasSurface({ templatesOpen, onTemplatesClose }: CanvasProps) {
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
       </ReactFlow>
+      <LiveCursors />
+      <PresenceAvatars />
+      <AiStatusBanner />
       <CanvasControls />
       <ShapePanel />
       <StarterTemplatesModal
